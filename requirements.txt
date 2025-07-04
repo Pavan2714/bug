@@ -7,4 +7,3 @@ python-dotenv
 requests
 itsdangerous
 werkzeug
-vercel-python-wsgi

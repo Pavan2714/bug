@@ -1572,9 +1572,6 @@ if __name__ == "__main__":
     app.run(host='0.0.0.0', port=args.port, debug=True)
 
 # Vercel serverless handler
-if os.environ.get("VERCEL"):
-    from vercel_wsgi import handle
-    app = handle(app)
 
 
 
