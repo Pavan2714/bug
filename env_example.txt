@@ -1,0 +1,27 @@
+# Database configuration
+DB_PATH=yolov11.db
+
+# Secret key for session management and token generation
+SECRET_KEY=your-secret-key-here
+
+# Admin credentials
+ADMIN_USERNAME=admin
+ADMIN_PASSWORD=admin123
+
+# Google OAuth configuration
+# Get these from Google Cloud Console: https://console.cloud.google.com/
+# 1. Create a new project or select existing one
+# 2. Enable Google+ API
+# 3. Go to Credentials > Create Credentials > OAuth 2.0 Client IDs
+# 4. Set authorized JavaScript origins to: http://localhost:4000 (for development)
+# 5. Set authorized redirect URIs to: http://localhost:4000/google-callback
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# Application settings
+DEBUG=False
+PORT=4000
+
+# Application specific folders
+UPLOAD_FOLDER=static/uploads
+RESULT_FOLDER=static/results

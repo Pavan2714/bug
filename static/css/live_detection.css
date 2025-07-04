@@ -1,0 +1,377 @@
+/* Live Detection Page Styles */
+:root {
+  --primary-color: #6366f1; /* From style1.css for active/accent */
+  --secondary-color: #8b5cf6; /* From style1.css for gradients */
+  --accent-color: #ec4899; /* From style1.css for gradients */
+  --background-dark-main: #1a202c; /* From style1.css body background */
+  --background-dark-secondary: #2d3748; /* From style1.css body background */
+  --background-card: rgba(255, 255, 255, 0.1); /* From style1.css stat-card */
+  --background-card-hover: rgba(
+    255,
+    255,
+    255,
+    0.15
+  ); /* From style1.css stat-card hover */
+  --text-color-light: #ffffff; /* From style1.css for headers */
+  --text-color-medium: #a0aec0; /* From style1.css for paragraphs */
+  --text-color-dark: #e2e8f0; /* From style1.css for nav links */
+  --border-color-dark: rgba(
+    255,
+    255,
+    255,
+    0.2
+  ); /* From style1.css stat-card border */
+  --shadow-color-dark: rgba(
+    0,
+    0,
+    0,
+    0.2
+  ); /* From style1.css stat-card shadow */
+  --shadow-color-light: rgba(0, 0, 0, 0.1); /* General lighter shadow */
+  --blur-effect: blur(20px); /* From style1.css backdrop-filter */
+}
+
+.live-detection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  color: var(--text-color-dark);
+  background: linear-gradient(
+    135deg,
+    var(--background-dark-main) 0%,
+    var(--background-dark-secondary) 50%,
+    #4a5568 100%
+  );
+  min-height: 100vh;
+  font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.detection-panel {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.webcam-container {
+  flex: 1;
+  min-width: 320px;
+  background: var(--background-card);
+  backdrop-filter: var(--blur-effect);
+  border: 1px solid var(--border-color-dark);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px var(--shadow-color-dark);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.webcam-container:hover {
+  background: var(--background-card-hover);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px var(--shadow-color-dark);
+}
+
+.webcam-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color-light);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+#webcam-feed {
+  width: 100%;
+  height: 360px;
+  background-color: #000;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#live-feed-image {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+}
+
+.controls {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.controls button {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: var(--text-color-light);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  font-size: 0.95rem;
+  border: 1px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.controls button::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.controls button:hover::before {
+  left: 100%;
+}
+
+.controls button:hover {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color),
+    var(--secondary-color)
+  );
+  color: var(--text-color-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.detection-results {
+  flex: 1;
+  min-width: 280px;
+  background: var(--background-card);
+  backdrop-filter: var(--blur-effect);
+  border: 1px solid var(--border-color-dark);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px var(--shadow-color-dark);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.detection-results:hover {
+  background: var(--background-card-hover);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px var(--shadow-color-dark);
+}
+
+.detection-results h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color-light);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+#liveDetectionResults {
+  min-height: 200px;
+  max-height: 250px;
+  overflow-y: auto;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-color-dark);
+}
+
+.detection-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.detection-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s;
+}
+
+.detection-item:last-child {
+  border-bottom: none;
+}
+
+.detection-item:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.object-class {
+  font-weight: 500;
+  color: var(--text-color-light);
+}
+
+.object-confidence {
+  color: var(--text-color-medium);
+  font-size: 0.9em;
+}
+
+#detectionStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 80px;
+}
+
+.stat-label {
+  font-size: 0.8em;
+  color: var(--text-color-medium);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 1.2em;
+  font-weight: 500;
+  color: var(--text-color-light);
+}
+
+.captured-frames {
+  background: var(--background-card);
+  backdrop-filter: var(--blur-effect);
+  border: 1px solid var(--border-color-dark);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px var(--shadow-color-dark);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.captured-frames:hover {
+  background: var(--background-card-hover);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px var(--shadow-color-dark);
+}
+
+.captured-frames h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: var(--text-color-light);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+#capturedFramesContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  min-height: 100px;
+}
+
+.captured-frame {
+  width: 200px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px var(--shadow-color-dark);
+  transition: transform 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.captured-frame:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.captured-frame img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.frame-info {
+  padding: 8px 12px;
+  font-size: 0.85em;
+}
+
+.frame-info p {
+  margin: 4px 0;
+  color: var(--text-color-medium);
+}
+
+.save-btn {
+  width: 100%;
+  border-radius: 0 0 12px 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--accent-color), #ec4899);
+  color: var(--text-color-light);
+  border: none;
+  padding: 0.75rem 0;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.save-btn:hover {
+  background: linear-gradient(135deg, #ec4899, var(--accent-color));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+}
+
+.error {
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .detection-panel {
+    flex-direction: column;
+  }
+
+  .webcam-container,
+  .detection-results {
+    width: 100%;
+  }
+
+  #webcam-feed {
+    height: 280px;
+  }
+
+  .captured-frame {
+    width: calc(50% - 10px);
+  }
+}
+
+@media (max-width: 480px) {
+  .captured-frame {
+    width: 100%;
+  }
+
+  .controls {
+    flex-direction: column;
+  }
+
+  .controls button {
+    width: 100%;
+  }
+}

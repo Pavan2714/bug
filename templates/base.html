@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}YOLO Object Detection{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/auth.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/sidebar.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/profile-updates.css') }}"
+    />
+    {% if request.endpoint == 'dashboard' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/dashboard.css') }}"
+    />
+    {% endif %}
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    {% block head_scripts %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/processing.css') }}"
+    />
+    {% if request.endpoint == 'live_detection' %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/live_detection.css') }}"
+    />
+    {% endif %} {% endblock %}
+  </head>
+  <body>
+    <div class="container">
+      <!-- User Profile Sidebar -->
+      <div class="sidebar">
+        <div class="profile-section">
+          <div class="profile-image-container">
+            {% if current_user.profile_image %} {% if
+            current_user.profile_image.startswith('http') %}
+            <!-- Google profile picture (external URL) -->
+            <img
+              src="{{ current_user.profile_image }}"
+              alt="Profile Image"
+              id="profile-image"
+              class="profile-image google-profile-image"
+            />
+            {% else %}
+            <!-- Local profile picture -->
+            <img
+              src="{{ url_for('static', filename=current_user.profile_image) }}"
+              alt="Profile Image"
+              id="profile-image"
+              class="profile-image local-profile-image"
+            />
+            {% endif %} {% else %}
+            <!-- Default profile picture -->
+            <img
+              src="{{ url_for('static', filename='uploads/default-profile.jpg.svg') }}"
+              alt="Profile Image"
+              id="profile-image"
+              class="profile-image default-profile-image"
+            />
+            {% endif %}
+            <div class="profile-image-overlay">
+              <i class="fas fa-camera"></i>
+              <span>Change Photo</span>
+            </div>
+            <input
+              type="file"
+              id="profile-image-upload"
+              accept=".jpg,.jpeg,.png"
+              style="display: none"
+            />
+          </div>
+          <h3 class="profile-name">
+            {% if current_user.is_authenticated %}{{ session.user_username }}{%
+            else %}Guest User{% endif %}
+          </h3>
+          <p class="profile-email">
+            {% if current_user.is_authenticated %}{{ current_user.email }}{%
+            else %}guest@example.com{% endif %}
+          </p>
+        </div>
+
+        <div class="sidebar-nav">
+          <a href="{{ url_for('dashboard') }}" class="sidebar-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('processing') }}" class="sidebar-nav-item">
+            <i class="fas fa-cogs"></i>
+            <span>Processing</span>
+          </a>
+          <a href="{{ url_for('uploads') }}" class="sidebar-nav-item">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>My Uploads</span>
+          </a>
+          <a href="{{ url_for('results') }}" class="sidebar-nav-item">
+            <i class="fas fa-images"></i>
+            <span>Detection Results</span>
+          </a>
+
+          <a href="{{ url_for('live_detection') }}" class="sidebar-nav-item">
+            <i class="fas fa-video"></i>
+            <span>Live Image Detection</span>
+          </a>
+          <a href="{{ url_for('logout') }}" class="sidebar-nav-item logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-area">
+        {% block header %}
+        <header class="header">
+          <h1><i class="fas fa-eye"></i> YOLO Object Detection</h1>
+          <p>Upload images or videos for AI-powered object detection</p>
+          <div class="user-nav"></div>
+          <a href="#" id="sidebarToggle" class="sidebar-toggle">
+            <i class="fas fa-bars"></i>
+          </a>
+        </header>
+        {% endblock %}
+
+        <main class="main-content">
+          {% block content %}
+          <!-- Page-specific content goes here -->
+          {% endblock %}
+        </main>
+
+        <footer class="footer">
+          <div class="features">
+            <div class="feature">
+              <i class="fas fa-image"></i>
+              <h4>Image Detection</h4>
+              <p>Upload JPG images for instant object detection</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-video"></i>
+              <h4>Video Processing</h4>
+              <p>Process MP4 videos with real-time detection</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-brain"></i>
+              <h4>AI Powered</h4>
+              <p>Using advanced YOLO neural network</p>
+            </div>
+          </div>
+          <p>&copy; 2023 YOLO Object Detection</p>
+        </footer>
+      </div>
+    </div>
+
+    <div id="message-container" class="message-container"></div>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+      // Handle profile image loading errors
+      document.addEventListener("DOMContentLoaded", function () {
+        const profileImage = document.getElementById("profile-image");
+        if (profileImage) {
+          profileImage.addEventListener("error", function () {
+            // Fallback to default profile image if loading fails
+            this.src =
+              "{{ url_for('static', filename='uploads/default-profile.jpg.svg') }}";
+            this.classList.remove(
+              "google-profile-image",
+              "local-profile-image"
+            );
+            this.classList.add("default-profile-image");
+          });
+        }
+      });
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

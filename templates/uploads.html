@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}My Uploads - YOLO Object Detection{% endblock %}
+
+{% block header %}
+        <header class="header">
+          <button id="sidebarToggle" class="sidebar-toggle"><i class="fas fa-bars"></i></button>
+          <h1><i class="fas fa-cloud-upload-alt"></i> My Uploads</h1>
+          <p>Manage your uploaded images and videos</p>
+          <div class="user-nav">
+          </div>
+        </header>
+{% endblock %}
+
+{% block content %}
+          <div class="gallery-section" style="display: block">
+            <div class="gallery-grid">
+              {% if user_uploads %} {% for upload in user_uploads %}
+              <div class="gallery-item">
+                <div class="gallery-item-image">
+                  {% if upload.filename.endswith('.mp4') %}
+                  <video
+                    src="{{ url_for('static', filename=upload.path) }}"
+                    controls
+                  ></video>
+                  {% else %}
+                  <img
+                    src="{{ url_for('static', filename=upload.path) }}"
+                    alt="{{ upload.filename }}"
+                  />
+                  {% endif %}
+                </div>
+                <div class="gallery-item-info">
+                  <p class="gallery-item-name">{{ upload.filename }}</p>
+                  <p class="gallery-item-date">{{ upload.date }}</p>
+                  <div class="gallery-item-actions">
+                    <a
+                      href="{{ url_for('static', filename=upload.path) }}"
+                      target="_blank"
+                      class="action-btn view-btn"
+                      title="View Full Size"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </a>
+                    <a
+                      href="{{ url_for('predict_img', file=upload.filename) }}"
+                      class="action-btn detect-btn"
+                      title="Run Detection"
+                    >
+                      <i class="fas fa-magic"></i>
+                    </a>
+                    <a
+                      href="#"
+                      class="action-btn delete-btn"
+                      title="Delete Upload"
+                      onclick="confirmDelete('{{ upload.path }}')"
+                    >
+                      <i class="fas fa-trash"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %} {% else %}
+              <p class="empty-gallery-message">
+                No uploads yet. Start by uploading an image or video for
+                detection.
+              </p>
+              {% endif %}
+            </div>
+          </div>
+{% endblock %}
+{% block scripts %}
+    <script>
+      // Profile image upload handling
+      const profileImageContainer = document.querySelector(
+        ".profile-image-container"
+      );
+      const profileImage = document.getElementById("profile-image");
+      const profileImageUpload = document.getElementById(
+        "profile-image-upload"
+      );
+
+      // Profile image upload handling
+      if (profileImageContainer) {
+        profileImageContainer.addEventListener("click", function () {
+          profileImageUpload.click();
+        });
+
+        profileImageUpload.addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              profileImage.src = e.target.result;
+
+              // Here you would typically upload the image to the server
+              // Create FormData object
+              const formData = new FormData();
+              formData.append("profile_image", file);
+
+              // Send the file to the server
+              fetch("/upload_profile_image", {
+                method: "POST",
+                body: formData,
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    // Show success notification
+                    const successMessage = document.createElement("div");
+                    successMessage.className = "profile-update-message";
+                    successMessage.innerHTML = (
+                      '<i class="fas fa-check-circle"></i> Profile image updated!'
+                    );
+                    document.body.appendChild(successMessage);
+
+                    // Remove the message after 3 seconds
+                    setTimeout(() => {
+                      successMessage.remove();
+                    }, 3000);
+                  } else {
+                    // Show error notification
+                    console.error("Error:", data.message);
+                    alert("Failed to update profile image: " + data.message);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error:", error);
+                  alert("An error occurred while updating profile image");
+                });
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      function confirmDelete(filePath) {
+        if (confirm("Are you sure you want to delete this upload?")) {
+          fetch(`/delete_upload/${filePath}`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                alert(data.message);
+                window.location.reload();
+              } else {
+                alert("Error: " + data.message);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred while deleting the upload.");
+            });
+        }
+      }
+    </script>
+
+{% endblock %}
+  </body>
+</html>

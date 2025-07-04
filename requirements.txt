@@ -1,0 +1,9 @@
+flask
+flask_sqlalchemy
+flask_login
+flask_mail
+gunicorn
+python-dotenv
+requests
+itsdangerous
+werkzeug

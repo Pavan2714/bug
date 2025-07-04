@@ -1,0 +1,202 @@
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-area {
+  flex-grow: 1;
+  padding: 2rem;
+  margin-left: 280px; /* Adjusted to match sidebar.css width */
+}
+
+.processing-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  color: #e2e8f0;
+}
+
+.processing-container h2 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+}
+
+.processing-container p {
+  color: #a0aec0;
+  margin-bottom: 1.5rem;
+}
+
+.step-indicator {
+  display: flex;
+  justify-content: space-around;
+  width: 80%;
+  margin-bottom: 30px;
+}
+
+.step {
+  text-align: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto 10px;
+  font-size: 24px;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.step-icon.active {
+  background-color: #6366f1;
+  border-color: #6366f1;
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+}
+
+.step-icon.completed {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.step-icon.completed::after {
+  content: "\2713"; /* Checkmark */
+  color: #fff;
+}
+
+.step p {
+  color: #e2e8f0;
+  font-weight: 500;
+}
+
+.step-content {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 800px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  color: #e2e8f0;
+}
+
+.hidden {
+  display: none;
+}
+
+.button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.btn {
+  padding: 12px 25px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 600;
+  margin: 0 10px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:disabled {
+  background-color: #4a5568;
+  color: #a0aec0;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+input[type="file"] {
+  display: block;
+  margin: 20px auto;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: #e2e8f0;
+  width: fit-content;
+}
+
+input[type="file"]::file-selector-button {
+  background-color: #6366f1;
+  color: white;
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+input[type="file"]::file-selector-button:hover {
+  background-color: #4f46e5;
+}
+
+#webcamFeedContainer {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#webcamVideo {
+  border-radius: 16px;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#webcamCanvas {
+  border-radius: 16px;
+  max-width: 100%;
+  height: auto;
+  margin-top: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#previewImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: 16px;
+  margin-top: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#processingStatus,
+#detectionResults {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 15px;
+  margin-top: 20px;
+  color: #e2e8f0;
+}
+
+#detectionResults img {
+  max-width: 100%;
+  border-radius: 12px;
+  margin-top: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YOLO Object Detection - Welcome</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      /* Reset and Base Styles with Dark Theme */
+      :root {
+        --primary-color: #6366f1;
+        --primary-hover: #8b5cf6;
+        --secondary-color: #10b981;
+        --secondary-hover: #059669;
+        --danger-color: #ef4444;
+        --danger-hover: #dc2626;
+        --text-color: #e2e8f0;
+        --text-light: #a0aec0;
+        --bg-color: rgba(26, 32, 44, 0.9);
+        --card-bg: rgba(45, 55, 72, 0.8);
+        --border-color: rgba(255, 255, 255, 0.15);
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2),
+          0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.25),
+          0 4px 6px -2px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+          Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue",
+          sans-serif;
+        color: var(--text-color);
+        line-height: 1.6;
+        background: linear-gradient(
+          135deg,
+          #1a202c 0%,
+          #2d3748 50%,
+          #4a5568 100%
+        );
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        overflow-x: hidden;
+        animation: fadeIn 0.8s ease-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* Header with Glass Morphism */
+      .landing-header {
+        padding: 1.5rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(26, 32, 44, 0.95);
+        backdrop-filter: blur(20px);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .logo::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        animation: shimmer 3s infinite linear;
+      }
+
+      @keyframes shimmer {
+        0% {
+          transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+        100% {
+          transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .nav-links a {
+        color: var(--text-color);
+        text-decoration: none;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 500;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-links a::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        transition: left 0.5s;
+      }
+
+      .nav-links a:hover::before {
+        left: 100%;
+      }
+
+      .nav-links a:hover {
+        background: rgba(99, 102, 241, 0.2);
+        border-color: rgba(99, 102, 241, 0.3);
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+      }
+
+      /* Hero Section with Animations */
+      .hero {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 4rem 2rem;
+        color: white;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(99, 102, 241, 0.1) 0%,
+          rgba(139, 92, 246, 0.1) 50%,
+          rgba(236, 72, 153, 0.1) 100%
+        );
+        z-index: -1;
+      }
+
+      .hero h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+        line-height: 1.2;
+        background: linear-gradient(135deg, #ffffff, #e2e8f0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .hero p {
+        font-size: 1.5rem;
+        max-width: 700px;
+        margin-bottom: 3rem;
+        opacity: 0.9;
+        color: var(--text-light);
+        animation: fadeInUp 0.8s ease-out 0.2s both;
+      }
+
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(30px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* CTA Buttons with Enhanced Effects */
+      .cta-buttons {
+        display: flex;
+        gap: 1.5rem;
+        animation: fadeInUp 0.8s ease-out 0.4s both;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 1.1rem;
+        position: relative;
+        overflow: hidden;
+        min-width: 180px;
+      }
+
+      .btn::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.2),
+          transparent
+        );
+        transition: left 0.6s;
+      }
+
+      .btn:hover::before {
+        left: 100%;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.4);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-4px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.15);
+        border-color: rgba(255, 255, 255, 0.4);
+      }
+
+      /* Features Section with Glass Cards */
+      .features {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin: 4rem auto;
+        padding: 0 2rem;
+        max-width: 1400px;
+        width: 100%;
+      }
+
+      .feature {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 2.5rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        animation: fadeInUp 0.8s ease-out;
+      }
+
+      .feature:nth-child(1) {
+        animation-delay: 0.2s;
+      }
+      .feature:nth-child(2) {
+        animation-delay: 0.3s;
+      }
+      .feature:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      .feature::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #6366f1, #8b5cf6, #ec4899);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .feature:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .feature-icon::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+          45deg,
+          transparent,
+          rgba(255, 255, 255, 0.1),
+          transparent
+        );
+        animation: shimmer 3s infinite linear;
+      }
+
+      .feature-icon i {
+        font-size: 2rem;
+        color: #ffffff;
+        z-index: 1;
+        position: relative;
+      }
+
+      .feature h3 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .feature p {
+        font-size: 1rem;
+        color: #cbd5e0;
+        opacity: 0.9;
+        line-height: 1.6;
+      }
+
+      /* Footer with Glass Effect */
+      .footer {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-light);
+        font-size: 0.9rem;
+        background: rgba(26, 32, 44, 0.95);
+        backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        margin-top: auto;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 1024px) {
+        .hero h1 {
+          font-size: 3rem;
+        }
+
+        .hero p {
+          font-size: 1.25rem;
+        }
+
+        .features {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        .landing-header {
+          flex-direction: column;
+          gap: 1.5rem;
+          padding: 1.5rem;
+        }
+
+        .nav-links {
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+
+        .hero h1 {
+          font-size: 2.5rem;
+        }
+
+        .hero p {
+          font-size: 1.1rem;
+        }
+
+        .cta-buttons {
+          flex-direction: column;
+          width: 100%;
+          max-width: 300px;
+        }
+
+        .btn {
+          width: 100%;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .hero h1 {
+          font-size: 2rem;
+        }
+
+        .hero p {
+          font-size: 1rem;
+        }
+
+        .features {
+          grid-template-columns: 1fr;
+        }
+
+        .feature {
+          padding: 2rem;
+        }
+      }
+
+      /* Dark mode enhancements */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: linear-gradient(
+            135deg,
+            #0f172a 0%,
+            #1e293b 50%,
+            #334155 100%
+          );
+        }
+
+        .landing-header {
+          background: rgba(15, 23, 42, 0.95);
+        }
+
+        .feature {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.1);
+        }
+      }
+
+      /* High contrast mode */
+      @media (prefers-contrast: high) {
+        .feature,
+        .btn {
+          border-width: 2px;
+          border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-links a {
+          border-width: 2px;
+        }
+      }
+
+      /* Reduced motion */
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="landing-header">
+      <div class="logo"><i class="fas fa-eye"></i> YOLO Detection</div>
+      <div class="nav-links">
+        <a href="{{ url_for('login_new') }}">Sign In</a>
+        <a href="{{ url_for('signup_new') }}">Sign Up</a>
+      </div>
+    </header>
+
+    <main class="hero">
+      <h1>AI-Powered Object Detection</h1>
+      <p>
+        Detect and analyze objects in images and videos with our advanced YOLO
+        neural network technology. Perfect for research, security, and
+        automation.
+      </p>
+
+      <div class="cta-buttons">
+        <a href="{{ url_for('signup_new') }}" class="btn btn-primary"
+          >Get Started</a
+        >
+        <a href="{{ url_for('login_new') }}" class="btn btn-secondary"
+          >Sign In</a
+        >
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <i class="fas fa-image"></i>
+          <h3>Image Detection</h3>
+          <p>
+            Upload JPG images for instant object detection with high accuracy
+            and detailed results.
+          </p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-video"></i>
+          <h3>Video Processing</h3>
+          <p>
+            Process MP4 videos with real-time detection capabilities and
+            frame-by-frame analysis.
+          </p>
+        </div>
+        <div class="feature">
+          <i class="fas fa-brain"></i>
+          <h3>AI Powered</h3>
+          <p>
+            Using advanced YOLO neural network for state-of-the-art object
+            detection performance.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <p>
+        &copy; {{ current_year }} YOLO Object Detection. All rights reserved.
+      </p>
+    </footer>
+  </body>
+</html>

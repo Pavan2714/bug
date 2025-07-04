@@ -1,0 +1,40 @@
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <h3>YOLOv11 Dashboard</h3>
+  </div>
+
+  <ul class="list-unstyled components">
+    <p>Welcome, {{ current_user.username }}</p>
+    <li>
+      <a href="{{ url_for('dashboard') }}">Dashboard</a>
+    </li>
+    <li>
+      <a href="{{ url_for('processing') }}">Processing</a>
+    </li>
+
+    <li>
+      <a href="{{ url_for('uploads') }}">My Uploads</a>
+    </li>
+    <li>
+      <a href="{{ url_for('results') }}">Detection Results</a>
+    </li>
+    <li>
+      <a href="{{ url_for('start_webcam') }}">Start Webcam Detection</a>
+    </li>
+    <li>
+      <a href="{{ url_for('live_detection') }}">
+        <i class="fas fa-camera"></i>
+        <span>Live Image Detection</span>
+      </a>
+    </li>
+    <li>
+      <a href="{{ url_for('logout') }}">Logout</a>
+    </li>
+    <li>
+      <a href="#" id="sidebarToggle">
+        <i class="fas fa-arrow-left"></i>
+        <span>Hide Sidebar</span>
+      </a>
+    </li>
+  </ul>
+</nav>

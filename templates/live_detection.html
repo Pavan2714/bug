@@ -1,0 +1,247 @@
+<html lang="en">
+  {% extends "base.html" %} {% block title %}Live Image Detection - YOLO Object
+  Detection{% endblock %} {% block header %}
+  <header class="header">
+    <button id="sidebarToggle" class="sidebar-toggle">
+      <i class="fas fa-bars"></i>
+    </button>
+    <h1>Live Image Detection</h1>
+    <p>Real-time object detection using your webcam.</p>
+  </header>
+  {% endblock %} {% block content %}
+  <div class="live-detection-container">
+    <div class="detection-panel">
+      <div class="webcam-container">
+        <h3>Live Webcam Feed</h3>
+        <div id="webcam-feed">
+          <img
+            src="{{ url_for('live_feed') }}"
+            alt="Live Detection Feed"
+            id="live-feed-image"
+          />
+        </div>
+        <div class="controls">
+          <button id="startDetectionBtn" class="btn btn-primary">
+            Start Detection
+          </button>
+          <button id="stopDetectionBtn" class="btn btn-danger" disabled>
+            Stop Detection
+          </button>
+          <button id="captureFrameBtn" class="btn btn-secondary">
+            Capture Frame
+          </button>
+        </div>
+      </div>
+
+      <div class="detection-results">
+        <h3>Detection Results</h3>
+        <div id="liveDetectionResults">
+          <p>Detection results will appear here when you start the webcam.</p>
+        </div>
+        <div id="detectionStats">
+          <div class="stat-item">
+            <span class="stat-label">Objects Detected:</span>
+            <span class="stat-value" id="objectCount">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">FPS:</span>
+            <span class="stat-value" id="fpsCounter">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Detection Time:</span>
+            <span class="stat-value" id="detectionTime">0 ms</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="captured-frames">
+      <h3>Captured Frames</h3>
+      <div id="capturedFramesContainer">
+        <p>Captured frames will appear here.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const startBtn = document.getElementById("startDetectionBtn");
+      const stopBtn = document.getElementById("stopDetectionBtn");
+      const captureBtn = document.getElementById("captureFrameBtn");
+      const liveDetectionResults = document.getElementById(
+        "liveDetectionResults"
+      );
+      const capturedFramesContainer = document.getElementById(
+        "capturedFramesContainer"
+      );
+      const objectCount = document.getElementById("objectCount");
+      const fpsCounter = document.getElementById("fpsCounter");
+      const detectionTime = document.getElementById("detectionTime");
+
+      let detectionActive = false;
+      let socket = null;
+
+      // Start live detection
+      startBtn.addEventListener("click", function () {
+        if (!detectionActive) {
+          // Clear previous results
+          liveDetectionResults.innerHTML = "<p>Starting detection...</p>";
+          console.log(
+            "Start Detection button clicked. Sending fetch request to start_live_detection."
+          );
+
+          // Connect to server for detection results via WebSocket or fetch API
+          fetch('{{ url_for("start_live_detection") }}')
+            .then((response) => response.json())
+            .then((data) => {
+              console.log("Response from start_live_detection:", data);
+              if (data.success) {
+                detectionActive = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+
+                // Start polling for detection results
+                pollDetectionResults();
+              } else {
+                liveDetectionResults.innerHTML = `<p class="error">Error: ${data.message}</p>`;
+              }
+            })
+            .catch((error) => {
+              console.error(
+                "Error sending start_live_detection request:",
+                error
+              );
+              liveDetectionResults.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            });
+        }
+      });
+
+      // Stop live detection
+      stopBtn.addEventListener("click", function () {
+        if (detectionActive) {
+          fetch('{{ url_for("stop_live_detection") }}')
+            .then((response) => response.json())
+            .then((data) => {
+              detectionActive = false;
+              startBtn.disabled = false;
+              stopBtn.disabled = true;
+              liveDetectionResults.innerHTML = "<p>Detection stopped.</p>";
+            })
+            .catch((error) => {
+              liveDetectionResults.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+            });
+        }
+      });
+
+      // Capture current frame
+      captureBtn.addEventListener("click", function () {
+        fetch('{{ url_for("capture_frame") }}')
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Add captured frame to the container
+              const frameElement = document.createElement("div");
+              frameElement.className = "captured-frame";
+              frameElement.innerHTML = `
+                <img src="${data.image_url}" alt="Captured Frame">
+                <div class="frame-info">
+                  <p>Time: ${data.timestamp}</p>
+                  <p>Objects: ${data.object_count}</p>
+                </div>
+                <button class="btn btn-sm btn-primary save-btn" data-path="${data.image_path}">Save</button>
+              `;
+
+              capturedFramesContainer.appendChild(frameElement);
+
+              // Add event listener to save button
+              const saveBtn = frameElement.querySelector(".save-btn");
+              saveBtn.addEventListener("click", function () {
+                const imagePath = this.getAttribute("data-path");
+                saveFrame(imagePath);
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error capturing frame:", error);
+          });
+      });
+
+      // Function to poll detection results
+      function pollDetectionResults() {
+        if (!detectionActive) return;
+
+        fetch('{{ url_for("get_detection_results") }}')
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              // Update detection results
+              updateDetectionResults(data.results);
+
+              // Update stats
+              objectCount.textContent = data.object_count;
+              fpsCounter.textContent = data.fps.toFixed(1);
+              detectionTime.textContent = `${data.detection_time.toFixed(
+                2
+              )} ms`;
+            }
+
+            // Continue polling if detection is active
+            if (detectionActive) {
+              setTimeout(pollDetectionResults, 200); // Poll every 200ms
+            }
+          })
+          .catch((error) => {
+            console.error("Error polling detection results:", error);
+            if (detectionActive) {
+              setTimeout(pollDetectionResults, 1000); // Retry after 1s on error
+            }
+          });
+      }
+
+      // Function to update detection results
+      function updateDetectionResults(results) {
+        liveDetectionResults.innerHTML = "";
+
+        if (results.length === 0) {
+          liveDetectionResults.innerHTML = "<p>No objects detected yet.</p>";
+          return;
+        }
+
+        const ul = document.createElement("ul");
+        results.forEach((result) => {
+          const li = document.createElement("li");
+          li.textContent = `${result.class}: ${result.confidence.toFixed(2)}`;
+          ul.appendChild(li);
+        });
+        liveDetectionResults.appendChild(ul);
+      }
+
+      // Function to save captured frame
+      function saveFrame(imagePath) {
+        fetch('{{ url_for("save_captured_frame") }}', {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ image_path: imagePath }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.success) {
+              alert("Frame saved successfully!");
+            } else {
+              alert("Error saving frame: " + data.message);
+            }
+          })
+          .catch((error) => {
+            console.error("Error saving frame:", error);
+            alert("An error occurred while saving the frame.");
+          });
+      }
+    });
+  </script>
+  <script>
+    // ... existing code ...
+  </script>
+  {% endblock %}
+</html>

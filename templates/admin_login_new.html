@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - YOLO Object Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/auth_new.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1><i class="fas fa-eye"></i> YOLO Object Detection</h1>
+        <p>Admin Portal Access</p>
+      </div>
+
+      <div class="auth-form">
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %} {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('admin_login_new') }}">
+          <div class="form-group">
+            <label for="username"
+              ><i class="fas fa-user-shield"></i> Admin Username</label
+            >
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter admin username"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password"><i class="fas fa-lock"></i> Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter admin password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-sign-in-alt"></i> Login as Administrator
+          </button>
+        </form>
+
+        <div class="auth-links">
+          <p>
+            Not an admin? <a href="{{ url_for('login_new') }}">User Login</a>
+          </p>
+          <p>
+            <a href="{{ url_for('landing') }}"
+              ><i class="fas fa-home"></i> Back to Home</a
+            >
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

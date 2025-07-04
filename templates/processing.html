@@ -1,0 +1,375 @@
+<html lang="en">
+  {% extends "base.html" %}
+  {% block title %}Processing - YOLO Object Detection{% endblock %}
+
+  {% block header %}
+        <header class="header">
+          <button id="sidebarToggle" class="sidebar-toggle"><i class="fas fa-bars"></i></button>
+          <h1><i class="fas fa-cogs"></i> Processing</h1>
+          <p>Upload images or use your webcam for object detection</p>
+        </header>
+{% endblock %}
+
+  {% block content %}
+  <div class="processing-container">
+
+      <div class="step-indicator">
+        <div class="step" id="step1">
+          <div class="step-icon active"><i class="fas fa-upload"></i></div>
+          <p>Upload File</p>
+        </div>
+        <div class="step" id="step2">
+          <div class="step-icon"><i class="fas fa-cogs"></i></div>
+          <p>Processing</p>
+        </div>
+        <div class="step" id="step3">
+          <div class="step-icon"><i class="fas fa-check"></i></div>
+          <p>Results</p>
+        </div>
+      </div>
+
+      <div class="step-content" id="upload-section">
+
+        <form id="uploadForm" enctype="multipart/form-data">
+          <input
+            type="file"
+            id="fileInput"
+            name="file"
+            accept="image/*,video/*"
+          />
+          <div class="button-container">
+            <button type="button" id="uploadButton" class="btn btn-primary">
+              Upload
+            </button>
+            <button type="button" id="webcamButton" class="btn btn-primary">
+              Use Webcam
+            </button>
+          </div>
+        </form>
+        <div id="webcamFeedContainer" style="display: none">
+          <video id="webcamVideo" autoplay playsinline></video>
+          <button id="captureButton" class="btn btn-primary">
+            Capture Photo
+          </button>
+        </div>
+        <img
+          id="previewImage"
+          src=""
+          alt="Image Preview"
+          style="display: none"
+        />
+      </div>
+
+      <div class="step-content hidden" id="processing-section">
+        <h3>Processing...</h3>
+        <p>Processing your image for object detection...</p>
+        <div id="processingStatus"></div>
+      </div>
+
+      <div class="step-content hidden" id="results-section">
+        <h3>Detection Results</h3>
+        <div id="detectionResults"></div>
+        <img id="processedImage" src="" alt="Processed Image" style="display: none; max-width: 100%; height: auto;">
+        <div id="successMessage" style="display:none; color: green; font-weight: bold; margin-top: 10px;">Upload successful! You can view your file in the uploads section.</div>
+        <div class="button-container">
+          <button type="button" id="viewResultsButton" class="btn btn-primary">
+            View Full Results
+          </button>
+          <button type="button" id="uploadNewFileButton" class="btn btn-secondary">
+            Upload New File
+          </button>
+          <a href="/uploads" id="viewUploadsButton" class="btn btn-success" style="display:none; margin-left: 10px;">View Uploads</a>
+        </div>
+      </div>
+    </div>
+  </script>
+  <script>
+    const processedImage = document.getElementById("processedImage");
+    const fileInput = document.getElementById("fileInput");
+    const uploadButton = document.getElementById("uploadButton");
+      const webcamButton = document.getElementById("webcamButton");
+      const captureButton = document.getElementById("captureButton");
+
+    const webcamFeedContainer = document.getElementById("webcamFeedContainer");
+    const webcamVideo = document.getElementById("webcamVideo");
+    const webcamCanvas = document.createElement("canvas");
+    const previewImage = document.getElementById("previewImage");
+    const uploadSection = document.getElementById("upload-section");
+    const processingSection = document.getElementById("processing-section");
+    const resultsSection = document.getElementById("results-section");
+    const step1 = document.getElementById("step1");
+    const step2 = document.getElementById("step2");
+    const step3 = document.getElementById("step3");
+    const processingStatus = document.getElementById("processingStatus");
+    const detectionResults = document.getElementById("detectionResults");
+    const viewResultsButton = document.getElementById("viewResultsButton");
+    const uploadNewFileButton = document.getElementById("uploadNewFileButton");
+
+    let currentStream;
+    let isProcessed = false;
+
+    function activateStep(stepElement) {
+      [step1, step2, step3].forEach((step) =>
+        step.querySelector(".step-icon").classList.remove("active", "completed")
+      );
+      stepElement.querySelector(".step-icon").classList.add("active");
+    }
+
+    function completeStep(stepElement) {
+      stepElement.querySelector(".step-icon").classList.remove("active");
+      stepElement.querySelector(".step-icon").classList.add("completed");
+    }
+
+    function showSection(sectionElement) {
+      [uploadSection, processingSection, resultsSection].forEach((section) =>
+        section.classList.add("hidden")
+      );
+      sectionElement.classList.remove("hidden");
+    }
+
+    uploadButton.addEventListener("click", () => {
+      fileInput.click(); // Trigger the file input click event
+
+    });
+
+    step1.addEventListener("click", () => {
+      activateStep(step1);
+      showSection(uploadSection);
+    });
+
+    step2.addEventListener("click", () => {
+      if (isProcessed) {
+        activateStep(step2);
+        showSection(processingSection);
+      } else {
+        alert("Please upload and process a file first.");
+      }
+    });
+
+    step3.addEventListener("click", () => {
+      if (isProcessed) {
+        activateStep(step3);
+        showSection(resultsSection);
+      } else {
+        alert("Please upload and process a file first.");
+      }
+    });
+
+    uploadNewFileButton.addEventListener("click", () => {
+      showSection(uploadSection);
+      activateStep(step1);
+      processedImage.style.display = "none";
+      detectionResults.innerHTML = "";
+      fileInput.value = ""; // Clear the file input
+      isProcessed = false; // Reset processing status
+    });
+
+    webcamButton.addEventListener("click", async () => {
+      if (webcamFeedContainer.style.display === "none") {
+        try {
+          currentStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          webcamVideo.srcObject = currentStream;
+
+
+
+          webcamFeedContainer.style.display = "block";
+          previewImage.style.display = "none";
+          fileInput.value = ""; // Clear file input
+        } catch (err) {
+          console.error("Error accessing webcam:", err);
+          alert(
+            "Could not access webcam. Please ensure you have a camera and have granted permission."
+          );
+        }
+      } else {
+        stopWebcam();
+      }
+    });
+
+    captureButton.addEventListener("click", async () => {
+      if (webcamVideo.srcObject) {
+        webcamCanvas.width = webcamVideo.videoWidth;
+        webcamCanvas.height = webcamVideo.videoHeight;
+        webcamCanvas
+          .getContext("2d")
+          .drawImage(
+            webcamVideo,
+            0,
+            0,
+            webcamCanvas.width,
+            webcamCanvas.height
+          );
+        const imageDataURL = webcamCanvas.toDataURL("image/jpeg");
+        previewImage.src = imageDataURL;
+        previewImage.style.display = "block";
+        stopWebcam();
+
+        // Convert data URL to Blob and then to File object
+        const blob = await (await fetch(imageDataURL)).blob();
+        const file = new File([blob], "webcam_capture.jpeg", {
+          type: "image/jpeg",
+        });
+        await uploadAndProcess(file);
+      }
+    });
+
+
+
+
+    function stopWebcam() {
+      if (currentStream) {
+        currentStream.getTracks().forEach((track) => track.stop());
+        webcamVideo.srcObject = null;
+        webcamFeedContainer.style.display = "none";
+      }
+    }
+
+    async function uploadAndProcess(file) {
+      console.log("uploadAndProcess function called with file:", file.name);
+      activateStep(step2);
+      showSection(processingSection);
+      
+      // Use the updateProcessingStatus function from script.js
+      if (window.updateProcessingStatus) {
+        window.updateProcessingStatus("Uploading file and starting detection...");
+      } else {
+        processingStatus.textContent = "Uploading file and starting detection...";
+      }
+
+      // Clear previous results
+      if (window.clearDetectionResults) {
+        window.clearDetectionResults();
+      } else {
+        detectionResults.innerHTML = "";
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        // Show upload status
+        if (window.updateProcessingStatus) {
+          window.updateProcessingStatus("Uploading file...", true);
+        }
+        
+        const response = await fetch("/upload_and_process", {
+          method: "POST",
+          body: formData,
+        });
+
+        // Show processing status
+        if (window.updateProcessingStatus) {
+          window.updateProcessingStatus("File uploaded, processing with YOLO model...", true);
+        }
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Show completion status
+          if (window.updateProcessingStatus) {
+            window.updateProcessingStatus("Processing complete! Displaying results...", true);
+          }
+          
+          completeStep(step2);
+          activateStep(step3);
+          showSection(resultsSection);
+          isProcessed = true;
+          
+          if (data.processed_file_url) {
+            processedImage.src = data.processed_file_url;
+            processedImage.style.display = "block";
+          }
+          
+          if (data.results && data.results.length > 0) {
+            // Use the addDetectionResult function from script.js
+            if (window.clearDetectionResults) {
+              window.clearDetectionResults();
+            } else {
+              detectionResults.innerHTML = "";
+            }
+            
+            data.results.forEach(result => {
+              if (window.addDetectionResult) {
+                window.addDetectionResult(result);
+              } else {
+                const p = document.createElement("p");
+                p.textContent = result;
+                detectionResults.appendChild(p);
+              }
+            });
+          } else {
+            detectionResults.innerHTML = "<p>No objects detected</p>";
+          }
+
+          viewResultsButton.onclick = () => {
+            window.location.href = `/results?filename=${encodeURIComponent(file.name)}&processed_image_url=${encodeURIComponent(data.processed_file_url)}`;
+          };
+
+          // Show success message and view uploads button
+          document.getElementById('successMessage').style.display = 'block';
+          document.getElementById('viewUploadsButton').style.display = 'inline-block';
+        } else {
+          if (window.updateProcessingStatus) {
+            window.updateProcessingStatus("Error during detection: " + data.message);
+          } else {
+            processingStatus.textContent = "Error during detection: " + data.message;
+          }
+          
+          activateStep(step1); // Go back to upload step on error
+          showSection(uploadSection);
+          alert("Error: " + data.message);
+
+          document.getElementById('successMessage').style.display = 'none';
+          document.getElementById('viewUploadsButton').style.display = 'none';
+        }
+      } catch (error) {
+        console.error("Network error during detection:", error);
+        
+        if (window.updateProcessingStatus) {
+          window.updateProcessingStatus("Network error during detection.");
+        } else {
+          processingStatus.textContent = "Network error during detection.";
+        }
+        
+        activateStep(step1); // Go back to upload step on error
+        showSection(uploadSection);
+        alert("Network error. Please try again.");
+
+        document.getElementById('successMessage').style.display = 'none';
+        document.getElementById('viewUploadsButton').style.display = 'none';
+      }
+    }
+
+    // Initial state
+    activateStep(step1);
+    showSection(uploadSection);
+
+
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        if (file.type.startsWith("image/") || file.type.startsWith("video/")) {
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            previewImage.src = e.target.result;
+            previewImage.style.display = "block";
+            webcamFeedContainer.style.display = "none";
+            stopWebcam();
+            await uploadAndProcess(file); // Call uploadAndProcess here
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert("Please upload an image or video file.");
+          fileInput.value = "";
+          previewImage.style.display = "none";
+
+        }
+      } else {
+        uploadButton.disabled = true; // Disable upload button if no file is selected
+      }
+    });
+  </script>
+  {% endblock %}
+</html>

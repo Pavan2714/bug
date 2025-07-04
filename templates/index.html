@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YOLO Object Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/auth.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/sidebar.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/profile-updates.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <!-- User Profile Sidebar -->
+      <div class="sidebar">
+        <div class="profile-section">
+          <div class="profile-image-container">
+            {% if current_user.profile_image %}
+            <img
+              src="{{ url_for('static', filename=current_user.profile_image) }}"
+              alt="Profile Image"
+              id="profile-image"
+              class="profile-image"
+            />
+            {% else %}
+            <img
+              src="{{ url_for('static', filename='uploads/default-profile.jpg.svg') }}"
+              alt="Profile Image"
+              id="profile-image"
+              class="profile-image"
+            />
+            {% endif %}
+            <div class="profile-image-overlay">
+              <i class="fas fa-camera"></i>
+              <span>Change Photo</span>
+            </div>
+            <input
+              type="file"
+              id="profile-image-upload"
+              accept=".jpg,.jpeg,.png"
+              style="display: none"
+            />
+          </div>
+          <h3 class="profile-name">
+            {% if current_user.is_authenticated %}{{ session.user_username }}{%
+            else %}Guest User{% endif %}
+          </h3>
+          <p class="profile-email">
+            {% if current_user.is_authenticated %}{{ current_user.email }}{%
+            else %}guest@example.com{% endif %}
+          </p>
+        </div>
+
+        <div class="sidebar-nav">
+          <a href="#" class="sidebar-nav-item active">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#uploads-gallery" class="sidebar-nav-item" id="show-uploads">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <span>My Uploads</span>
+          </a>
+          <a href="#results-gallery" class="sidebar-nav-item" id="show-results">
+            <i class="fas fa-images"></i>
+            <span>Detection Results</span>
+          </a>
+          <a href="{{ url_for('logout') }}" class="sidebar-nav-item logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="main-area">
+        <header class="header">
+          <h1><i class="fas fa-eye"></i> YOLO Object Detection</h1>
+          <p>Upload images or videos for AI-powered object detection</p>
+          <div class="user-nav">
+            {% if webcam_available %}
+            <a href="{{ url_for('start_webcam') }}" class="webcam-btn"
+              ><i class="fas fa-camera"></i> Start Webcam Detection</a
+            >
+            {% endif %}
+          </div>
+        </header>
+
+        <main class="main-content">
+          <div class="upload-section">
+            <form
+              method="POST"
+              action="{{ url_for('predict_img') }}"
+              enctype="multipart/form-data"
+              id="uploadForm"
+            >
+              <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">
+                  <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Drag & Drop or Click to Upload</h3>
+                <p>Supports JPG images and MP4 videos</p>
+                <input
+                  type="file"
+                  name="file"
+                  id="fileInput"
+                  accept=".jpg,.jpeg,.mp4"
+                  required
+                />
+                <button
+                  type="button"
+                  class="browse-btn"
+                  onclick="document.getElementById('fileInput').click()"
+                >
+                  <i class="fas fa-folder-open"></i> Browse Files
+                </button>
+              </div>
+
+              <div class="file-info" id="fileInfo" style="display: none">
+                <div class="file-details">
+                  <i class="fas fa-file"></i>
+                  <span id="fileName"></span>
+                  <span id="fileSize"></span>
+                </div>
+                <button
+                  type="button"
+                  class="remove-file"
+                  onclick="removeFile()"
+                >
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+
+              <button type="submit" class="submit-btn" id="submitBtn" disabled>
+                <i class="fas fa-magic"></i> Detect Objects
+              </button>
+            </form>
+          </div>
+
+          <div
+            class="loading-section"
+            id="loadingSection"
+            style="display: none"
+          >
+            <div class="loader">
+              <div class="spinner"></div>
+            </div>
+            <h3>Processing your file...</h3>
+            <p>Our AI is analyzing and detecting objects. Please wait.</p>
+          </div>
+
+          {% if image_path or video_detection %}
+          <div class="result-section">
+            <h2><i class="fas fa-check-circle"></i> Detection Results</h2>
+
+            {% if image_path %}
+            <div class="result-container">
+              <img
+                src="{{ image_path }}"
+                alt="Detection Result"
+                class="result-image"
+              />
+            </div>
+            {% endif %} {% if video_detection %}
+            <div class="result-container video-result-container">
+              <h3><i class="fas fa-video"></i> Video Detection</h3>
+              <div class="video-player">
+                <img
+                  src="{{ url_for('video_feed') }}"
+                  alt="Video Detection"
+                  class="video-feed"
+                />
+              </div>
+            </div>
+            {% endif %} {% if detection_info %}
+            <div class="detection-info">
+              <h3><i class="fas fa-info-circle"></i> Detection Information</h3>
+              {% if image_path %}
+              <p>
+                Objects were successfully detected in your image using YOLOv8
+                with the trained model.
+              </p>
+              <p>
+                The image above shows the detected objects with bounding boxes
+                and labels.
+              </p>
+              {% elif video_detection %}
+              <p>
+                Objects were successfully detected in your video using YOLOv8
+                with the trained model.
+              </p>
+              <p>
+                The video stream shows the detected objects with bounding boxes
+                and labels.
+              </p>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            <div class="result-actions">
+              <button
+                onclick="downloadResult()"
+                class="action-btn download-btn"
+              >
+                <i class="fas fa-download"></i> Download Result
+              </button>
+              <button
+                onclick="location.reload()"
+                class="action-btn new-upload-btn"
+              >
+                <i class="fas fa-plus"></i> New Upload
+              </button>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="video-section" id="videoSection" style="display: none">
+            <h2><i class="fas fa-video"></i> Live Video Detection</h2>
+            <div class="video-container">
+              <img
+                src="{{ url_for('video_feed') }}"
+                alt="Video Feed"
+                class="video-feed"
+              />
+            </div>
+            <div class="video-controls">
+              <button onclick="location.reload()" class="action-btn">
+                <i class="fas fa-stop"></i> Stop & New Upload
+              </button>
+            </div>
+          </div>
+
+          {% if webcam_active %}
+          <div class="webcam-section">
+            <h2><i class="fas fa-camera"></i> Live Webcam Detection</h2>
+            <div class="webcam-container">
+              <img
+                src="{{ url_for('webcam_feed') }}"
+                alt="Webcam Feed"
+                class="webcam-feed"
+              />
+            </div>
+            <div class="webcam-info">
+              <p>Objects are being detected in real-time using YOLOv8.</p>
+              <p>
+                The webcam stream shows detected objects with bounding boxes and
+                labels.
+              </p>
+            </div>
+            <div class="webcam-controls">
+              <a
+                href="{{ url_for('stop_webcam') }}"
+                class="action-btn webcam-stop-btn"
+              >
+                <i class="fas fa-stop"></i> Stop Webcam
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          <!-- User Galleries Section -->
+          <div
+            id="uploads-gallery"
+            class="gallery-section"
+            style="display: none"
+          >
+            <h2><i class="fas fa-cloud-upload-alt"></i> My Uploads</h2>
+            <div class="gallery-grid">
+              {% if user_uploads %} {% for upload in user_uploads %}
+              <div class="gallery-item">
+                <div class="gallery-item-image">
+                  {% if upload.filename.endswith('.mp4') %}
+                  <video
+                    src="{{ url_for('static', filename='uploads/' + upload.filename) }}"
+                    controls
+                  ></video>
+                  {% else %}
+                  <img
+                    src="{{ url_for('static', filename='uploads/' + upload.filename) }}"
+                    alt="{{ upload.filename }}"
+                  />
+                  {% endif %}
+                </div>
+                <div class="gallery-item-info">
+                  <p class="gallery-item-name">{{ upload.filename }}</p>
+                  <p class="gallery-item-date">{{ upload.date }}</p>
+                  <div class="gallery-item-actions">
+                    <a
+                      href="{{ url_for('static', filename='uploads/' + upload.filename) }}"
+                      target="_blank"
+                      class="action-btn view-btn"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %} {% else %}
+              <p class="empty-gallery-message">
+                No uploads yet. Start by uploading an image or video for
+                detection.
+              </p>
+              {% endif %}
+            </div>
+          </div>
+
+          <div
+            id="results-gallery"
+            class="gallery-section"
+            style="display: none"
+          >
+            <h2><i class="fas fa-images"></i> Detection Results</h2>
+            <div class="gallery-grid">
+              {% if user_results %} {% for result in user_results %}
+              <div class="gallery-item">
+                <div class="gallery-item-image">
+                  {% if result.filename.endswith('.mp4') %}
+                  <video
+                    src="{{ url_for('static', filename='results/' + result.filename) }}"
+                    controls
+                  ></video>
+                  {% else %}
+                  <img
+                    src="{{ url_for('static', filename='results/' + result.filename) }}"
+                    alt="{{ result.filename }}"
+                  />
+                  {% endif %}
+                </div>
+                <div class="gallery-item-info">
+                  <p class="gallery-item-name">{{ result.filename }}</p>
+                  <p class="gallery-item-date">{{ result.date }}</p>
+                  <div class="gallery-item-actions">
+                    <a
+                      href="{{ url_for('static', filename='results/' + result.filename) }}"
+                      target="_blank"
+                      class="action-btn view-btn"
+                    >
+                      <i class="fas fa-eye"></i>
+                    </a>
+                  </div>
+                </div>
+              </div>
+              {% endfor %} {% else %}
+              <p class="empty-gallery-message">
+                No detection results yet. Process an image or video to see
+                results here.
+              </p>
+              {% endif %}
+            </div>
+          </div>
+        </main>
+
+        <footer class="footer">
+          <div class="features">
+            <div class="feature">
+              <i class="fas fa-image"></i>
+              <h4>Image Detection</h4>
+              <p>Upload JPG images for instant object detection</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-video"></i>
+              <h4>Video Processing</h4>
+              <p>Process MP4 videos with real-time detection</p>
+            </div>
+            <div class="feature">
+              <i class="fas fa-brain"></i>
+              <h4>AI Powered</h4>
+              <p>Using advanced YOLO neural network</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+      <!-- Close main-area div -->
+    </div>
+
+    <script>
+      // File Upload Handling
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const fileInfo = document.getElementById("fileInfo");
+      const fileName = document.getElementById("fileName");
+      const fileSize = document.getElementById("fileSize");
+      const submitBtn = document.getElementById("submitBtn");
+      const uploadForm = document.getElementById("uploadForm");
+      const loadingSection = document.getElementById("loadingSection");
+
+      // Sidebar Navigation
+      const showUploadsBtn = document.getElementById("show-uploads");
+      const showResultsBtn = document.getElementById("show-results");
+      const uploadsGallery = document.getElementById("uploads-gallery");
+      const resultsGallery = document.getElementById("results-gallery");
+
+      // Profile Image Upload
+      const profileImageContainer = document.querySelector(
+        ".profile-image-container"
+      );
+      const profileImage = document.getElementById("profile-image");
+      const profileImageUpload = document.getElementById(
+        "profile-image-upload"
+      );
+
+      // Initialize sidebar navigation
+      if (showUploadsBtn) {
+        showUploadsBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          // Hide other sections
+          document.querySelectorAll(".gallery-section").forEach((section) => {
+            section.style.display = "none";
+          });
+          // Show uploads gallery
+          uploadsGallery.style.display = "block";
+          // Update active state
+          document.querySelectorAll(".sidebar-nav-item").forEach((item) => {
+            item.classList.remove("active");
+          });
+          this.classList.add("active");
+        });
+      }
+
+      if (showResultsBtn) {
+        showResultsBtn.addEventListener("click", function (e) {
+          e.preventDefault();
+          // Hide other sections
+          document.querySelectorAll(".gallery-section").forEach((section) => {
+            section.style.display = "none";
+          });
+          // Show results gallery
+          resultsGallery.style.display = "block";
+          // Update active state
+          document.querySelectorAll(".sidebar-nav-item").forEach((item) => {
+            item.classList.remove("active");
+          });
+          this.classList.add("active");
+        });
+      }
+
+      // Profile image upload handling
+      if (profileImageContainer) {
+        profileImageContainer.addEventListener("click", function () {
+          profileImageUpload.click();
+        });
+
+        profileImageUpload.addEventListener("change", function () {
+          const file = this.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+              profileImage.src = e.target.result;
+
+              // Here you would typically upload the image to the server
+              // Create FormData object
+              const formData = new FormData();
+              formData.append("profile_image", file);
+
+              // Send the file to the server
+              fetch("/upload_profile_image", {
+                method: "POST",
+                body: formData,
+              })
+                .then((response) => response.json())
+                .then((data) => {
+                  if (data.success) {
+                    // Show success notification
+                    const successMessage = document.createElement("div");
+                    successMessage.className = "profile-update-message";
+                    successMessage.innerHTML =
+                      '<i class="fas fa-check-circle"></i> Profile image updated!';
+                    document.body.appendChild(successMessage);
+
+                    // Remove the message after 3 seconds
+                    setTimeout(() => {
+                      successMessage.remove();
+                    }, 3000);
+                  } else {
+                    // Show error notification
+                    console.error("Error:", data.message);
+                    alert("Failed to update profile image: " + data.message);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Error:", error);
+                  alert("An error occurred while updating profile image");
+                });
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+      }
+
+      // Drag and drop functionality
+      if (uploadArea) {
+        uploadArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadArea.classList.add("drag-over");
+        });
+
+        uploadArea.addEventListener("dragleave", () => {
+          uploadArea.classList.remove("drag-over");
+        });
+
+        uploadArea.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove("drag-over");
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+          }
+        });
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener("change", handleFileSelect);
+      }
+
+      function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+          const validTypes = ["image/jpeg", "image/jpg", "video/mp4"];
+          if (validTypes.includes(file.type)) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = "flex";
+            uploadArea.style.display = "none";
+            submitBtn.disabled = false;
+          } else {
+            alert("Please select a valid JPG image or MP4 video file.");
+            removeFile();
+          }
+        }
+      }
+
+      function removeFile() {
+        fileInput.value = "";
+        fileInfo.style.display = "none";
+        uploadArea.style.display = "flex";
+        submitBtn.disabled = true;
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      if (uploadForm) {
+        uploadForm.addEventListener("submit", (e) => {
+          const file = fileInput.files[0];
+          if (file && file.type === "video/mp4") {
+            loadingSection.style.display = "block";
+            // For video files, show video section after processing
+            setTimeout(() => {
+              document.getElementById("videoSection").style.display = "block";
+              loadingSection.style.display = "none";
+            }, 3000);
+          } else {
+            loadingSection.style.display = "block";
+          }
+        });
+      }
+
+      function downloadResult() {
+        // This would need to be implemented on the backend
+        alert("Download functionality would be implemented on the backend");
+      }
+
+      // Auto-hide loading on page load if there's a result
+      window.addEventListener("load", () => {
+        if (document.querySelector(".result-section")) {
+          loadingSection.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

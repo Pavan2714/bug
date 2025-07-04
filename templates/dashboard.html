@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+{% extends "base.html" %}
+
+{% block title %}Dashboard - YOLO Object Detection{% endblock %}
+
+{% block content %}
+          <div class="dashboard-container">
+            <div class="introduction-section">
+              <h2>Welcome to Your Object Detection Dashboard!</h2>
+              <p>This dashboard provides a comprehensive platform for all your object detection needs. You can upload images or videos for analysis, or utilize the live detection feature with your webcam. Explore the powerful capabilities of YOLOv8 and gain insights from your data.</p>
+            </div>
+
+            {% if image_detection or video_detection %}
+            <h3 class="section-title">Detection Results</h3>
+            <div class="detection-results-section">
+              {% if image_detection %}
+              <img src="{{ url_for('static', filename=image_detection) }}" alt="Detected Image" class="detection-image" />
+              <p>Objects were successfully detected in your image using YOLOv8 with the trained model.</p>
+              <p>The image above shows the detected objects with bounding boxes and labels.</p>
+              {% elif video_detection %}
+              <video controls class="detection-video">
+                <source src="{{ url_for('static', filename=video_detection) }}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <p>Objects were successfully detected in your video using YOLOv8 with the trained model.</p>
+              <p>The video stream shows the detected objects with bounding boxes and labels.</p>
+              {% endif %}
+              <div class="result-actions">
+                <button onclick="downloadResult()" class="action-btn download-btn">
+                  <i class="fas fa-download"></i> Download Result
+                </button>
+                <button onclick="location.reload()" class="action-btn new-upload-btn">
+                  <i class="fas fa-plus"></i> New Upload
+                </button>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if webcam_active %}
+            <h3 class="section-title">Live Webcam Detection</h3>
+            <div class="webcam-section">
+              <div class="webcam-container">
+                <img src="{{ url_for('webcam_feed') }}" alt="Webcam Feed" class="webcam-feed" />
+              </div>
+              <div class="webcam-info">
+                <p>Objects are being detected in real-time using YOLOv8.</p>
+                <p>The webcam stream shows detected objects with bounding boxes and labels.</p>
+              </div>
+              <div class="webcam-controls">
+                <a href="{{ url_for('stop_webcam') }}" class="action-btn webcam-stop-btn">
+                  <i class="fas fa-stop"></i> Stop Webcam
+                </a>
+              </div>
+            </div>
+            {% endif %}
+          </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+      // File Upload Handling
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const fileInfo = document.getElementById("fileInfo");
+      const fileName = document.getElementById("fileName");
+      const fileSize = document.getElementById("fileSize");
+      const submitBtn = document.getElementById("submitBtn");
+      const uploadForm = document.getElementById("uploadForm");
+      const loadingSection = document.getElementById("loadingSection");
+
+      // Drag and drop functionality
+      if (uploadArea) {
+        uploadArea.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          uploadArea.classList.add("drag-over");
+        });
+
+        uploadArea.addEventListener("dragleave", () => {
+          uploadArea.classList.remove("drag-over");
+        });
+
+        uploadArea.addEventListener("drop", (e) => {
+          e.preventDefault();
+          uploadArea.classList.remove("drag-over");
+          const files = e.dataTransfer.files;
+          if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect();
+          }
+        });
+      }
+
+      if (fileInput) {
+        fileInput.addEventListener("change", handleFileSelect);
+      }
+
+      function handleFileSelect() {
+        const file = fileInput.files[0];
+        if (file) {
+          const validTypes = ["image/jpeg", "image/jpg", "video/mp4"];
+          if (validTypes.includes(file.type)) {
+            fileName.textContent = file.name;
+            fileSize.textContent = formatFileSize(file.size);
+            fileInfo.style.display = "flex";
+            uploadArea.style.display = "none";
+            submitBtn.disabled = false;
+          } else {
+            alert("Please select a valid JPG image or MP4 video file.");
+            removeFile();
+          }
+        }
+      }
+
+      function removeFile() {
+        fileInput.value = "";
+        fileInfo.style.display = "none";
+        uploadArea.style.display = "flex";
+        submitBtn.disabled = true;
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      if (uploadForm) {
+        uploadForm.addEventListener("submit", (e) => {
+          const file = fileInput.files[0];
+          if (file && file.type === "video/mp4") {
+            loadingSection.style.display = "block";
+            // For video files, show video section after processing
+            setTimeout(() => {
+              document.getElementById("videoSection").style.display = "block";
+              loadingSection.style.display = "none";
+            }, 3000);
+          } else {
+            loadingSection.style.display = "block";
+          }
+        });
+      }
+
+      function downloadResult() {
+        // This would need to be implemented on the backend
+        alert("Download functionality would be implemented on the backend");
+      }
+
+      // Auto-hide loading on page load if there's a result
+      window.addEventListener("load", () => {
+        if (document.querySelector(".result-section")) {
+          loadingSection.style.display = "none";
+        }
+      });
+    </script>
+{% endblock %}
+
+</body>
+</html>

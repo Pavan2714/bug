@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - YOLO Object Detection</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/auth_new.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+  </head>
+  <body>
+    <div class="auth-container">
+      <div class="auth-header">
+        <h1><i class="fas fa-eye"></i> YOLO Object Detection</h1>
+        <p>Sign in to your account</p>
+      </div>
+
+      <div class="auth-form">
+        {% if error %}
+        <div class="alert alert-danger">
+          <i class="fas fa-exclamation-circle"></i> {{ error }}
+        </div>
+        {% endif %} {% if success %}
+        <div class="alert alert-success">
+          <i class="fas fa-check-circle"></i> {{ success }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login_new') }}">
+          <div class="form-group">
+            <label for="username"><i class="fas fa-user"></i> Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="password"><i class="fas fa-lock"></i> Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <div class="password-links">
+              <a
+                href="{{ url_for('forgot_password') }}"
+                class="forgot-password-link"
+              >
+                <i class="fas fa-question-circle"></i> Forgot Password?
+              </a>
+            </div>
+          </div>
+
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-sign-in-alt"></i> Sign In
+          </button>
+        </form>
+
+        <div class="auth-links">
+          <p>
+            Don't have an account?
+            <a href="{{ url_for('signup_new') }}">Sign Up</a>
+          </p>
+          <p>
+            Admin access?
+            <a href="{{ url_for('admin_login_new') }}">Admin Login</a>
+          </p>
+          <p>
+            <a href="{{ url_for('landing') }}"
+              ><i class="fas fa-home"></i> Back to Home</a
+            >
+          </p>
+        </div>
+      </div>
+
+      <div class="social-login">
+        <p>Or sign in with</p>
+        <div class="social-buttons">
+          <div
+            id="g_id_onload"
+            data-client_id="{{ config.GOOGLE_CLIENT_ID }}"
+            data-context="signin"
+            data-ux_mode="popup"
+            data-callback="handleGoogleSignIn"
+            data-auto_prompt="false"
+          ></div>
+          <div
+            class="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="outline"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function handleGoogleSignIn(response) {
+        if (response.credential) {
+          // Send the credential to our backend
+          fetch('{{ url_for("google_callback") }}', {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              credential: response.credential,
+            }),
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.success) {
+                // Redirect to dashboard on success
+                window.location.href = '{{ url_for("dashboard") }}';
+              } else {
+                // Show error message
+                alert("Google Sign-In failed: " + data.message);
+              }
+            })
+            .catch((error) => {
+              console.error("Error:", error);
+              alert("An error occurred during Google Sign-In");
+            });
+        }
+      }
+    </script>
+  </body>
+</html>
