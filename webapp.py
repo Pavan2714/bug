@@ -1565,11 +1565,16 @@ def cleanup_uploads():
     })
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description="Flask app exposing yolov8 models")
     parser.add_argument("--port", default=config.Config.PORT, type=int, help="port number")
     args = parser.parse_args()
-
     app.run(host='0.0.0.0', port=args.port, debug=True)
+
+# Vercel serverless handler
+if os.environ.get("VERCEL"):
+    from vercel_wsgi import handle
+    app = handle(app)
 
 
 
