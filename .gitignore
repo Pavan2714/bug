@@ -13,6 +13,7 @@ static/results/
 # Output files
 output.mp4
 runs/
+datasets/
 
 # Cache and temp files
 __pycache__/
